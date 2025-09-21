@@ -1508,44 +1508,45 @@ const mockData = {
             createdAt: '2024-01-25'
         }
     ],
-    mcqAssignments: [
-        {
-            id: 'mcq1',
-            title: 'Programming Basics Quiz',
-            description: 'Test your knowledge of programming fundamentals including variables, data types, and control structures.',
-            dueDate: '2024-02-25',
-            subject: 'Programming',
-            questions: [
-                {
-                    id: 'q1',
-                    question: 'What is a variable in programming?',
-                    options: ['A storage location for data', 'A function that performs calculations', 'A loop that repeats code', 'A condition that checks values'],
-                    correctAnswer: 'A storage location for data',
-                    points: 10
-                },
-                {
-                    id: 'q2',
-                    question: 'Which keyword is used to declare a variable in JavaScript?',
-                    options: ['var', 'let', 'const', 'All of the above'],
-                    correctAnswer: 'All of the above',
-                    points: 10
-                },
-                {
-                    id: 'q3',
-                    question: 'What is the purpose of a function in programming?',
-                    options: ['To store data', 'To repeat code', 'To organize and reuse code', 'To create variables'],
-                    correctAnswer: 'To organize and reuse code',
-                    points: 10
-                }
-            ],
-            totalPoints: 30,
-            timeLimit: 30,
-            allowRetake: true,
-            showCorrectAnswers: true,
-            createdBy: 'staff1',
-            createdAt: '2024-01-25'
-        }
-    ],
+    // MCQ functionality removed as per user request
+    // mcqAssignments: [
+    //     {
+    //         id: 'mcq1',
+    //         title: 'Programming Basics Quiz',
+    //         description: 'Test your knowledge of programming fundamentals including variables, data types, and control structures.',
+    //         dueDate: '2024-02-25',
+    //         subject: 'Programming',
+    //         questions: [
+    //             {
+    //                 id: 'q1',
+    //                 question: 'What is a variable in programming?',
+    //                 options: ['A storage location for data', 'A function that performs calculations', 'A loop that repeats code', 'A condition that checks values'],
+    //                 correctAnswer: 'A storage location for data',
+    //                 points: 10
+    //             },
+    //             {
+    //                 id: 'q2',
+    //                 question: 'Which keyword is used to declare a variable in JavaScript?',
+    //                 options: ['var', 'let', 'const', 'All of the above'],
+    //                 correctAnswer: 'All of the above',
+    //                 points: 10
+    //             },
+    //             {
+    //                 id: 'q3',
+    //                 question: 'What is the purpose of a function in programming?',
+    //                 options: ['To store data', 'To repeat code', 'To organize and reuse code', 'To create variables'],
+    //                 correctAnswer: 'To organize and reuse code',
+    //                 points: 10
+    //             }
+    //         ],
+    //         totalPoints: 30,
+    //         timeLimit: 30,
+    //         allowRetake: true,
+    //         showCorrectAnswers: true,
+    //         createdBy: 'staff1',
+    //         createdAt: '2024-01-25'
+    //     }
+    // ],
     applications: [
         {
             id: 'app1',
@@ -1829,20 +1830,21 @@ function loadData() {
         console.log('📅 Loaded', scheduleEvents.length, 'schedule events from mock data');
     }
     
+    // MCQ functionality removed as per user request
     // Load MCQ assignments from localStorage or use mock data
-    const savedMcqAssignments = localStorage.getItem('mcqAssignments');
-    if (savedMcqAssignments) {
-        // mcqAssignments removed = JSON.parse(savedMcqAssignments);
-    } else {
-        // mcqAssignments removed = mockData.mcqAssignments;
-        localStorage.setItem('mcqAssignments', JSON.stringify(mcqAssignments));
-    }
+    // const savedMcqAssignments = localStorage.getItem('mcqAssignments');
+    // if (savedMcqAssignments) {
+    //     mcqAssignments = JSON.parse(savedMcqAssignments);
+    // } else {
+    //     mcqAssignments = mockData.mcqAssignments;
+    //     localStorage.setItem('mcqAssignments', JSON.stringify(mcqAssignments));
+    // }
     
     // Load MCQ submissions from localStorage
-    const savedMcqSubmissions = localStorage.getItem('mcqSubmissions');
-    if (savedMcqSubmissions) {
-        mcqSubmissions = JSON.parse(savedMcqSubmissions);
-    }
+    // const savedMcqSubmissions = localStorage.getItem('mcqSubmissions');
+    // if (savedMcqSubmissions) {
+    //     mcqSubmissions = JSON.parse(savedMcqSubmissions);
+    // }
     
     // Use mock data for users
     users = mockData.users;
@@ -2624,17 +2626,17 @@ function showView(viewName) {
                     </div>
                 </div>
             `;
-            
-            // Load real data in Web Worker
-            if (dataWorker) {
-                dataWorker.postMessage({ 
-                    type: 'loadAssignments', 
-                    data: assignments 
-                });
-            } else {
-                // Fallback if Web Worker fails
-                loadFirebaseDataInBackground();
-            }
+                
+                // Load real data in Web Worker
+                if (dataWorker) {
+                    dataWorker.postMessage({ 
+                        type: 'loadAssignments', 
+                        data: assignments 
+                    });
+                } else {
+                    // Fallback if Web Worker fails
+                    loadFirebaseDataInBackground();
+                }
             
             return;
         }
@@ -3086,9 +3088,9 @@ async function loadFirebaseDataInBackground() {
             
             // Re-render with Firebase data if we're on assignments page
             if (currentView === 'assignments') {
-                const contentArea = document.getElementById('contentArea');
+            const contentArea = document.getElementById('contentArea');
                 if (contentArea) {
-                    contentArea.innerHTML = renderAssignments();
+            contentArea.innerHTML = renderAssignments();
                     console.log('✅ Assignment view refreshed with Firebase data');
                 }
             }
@@ -3096,9 +3098,9 @@ async function loadFirebaseDataInBackground() {
         
         // Load submissions with error handling
         try {
-            const firebaseSubmissions = await getSubmissionsWithCache();
+        const firebaseSubmissions = await getSubmissionsWithCache();
             if (firebaseSubmissions && firebaseSubmissions.length >= 0) {
-                submissions = firebaseSubmissions;
+            submissions = firebaseSubmissions;
                 localStorage.setItem('submissions', JSON.stringify(submissions));
                 console.log(`✅ Background loaded ${submissions.length} Firebase submissions`);
             }
@@ -3108,9 +3110,9 @@ async function loadFirebaseDataInBackground() {
         
         // Final re-render with all Firebase data if on assignments page
         if (currentView === 'assignments') {
-            const contentArea = document.getElementById('contentArea');
+        const contentArea = document.getElementById('contentArea');
             if (contentArea) {
-                contentArea.innerHTML = renderAssignments();
+        contentArea.innerHTML = renderAssignments();
                 console.log('✅ Final assignment view refresh completed');
             }
         }
@@ -3459,18 +3461,18 @@ function renderStudentAssignments() {
                 <div class="content-section">
                     <div class="section-header">
                         <h2><i class="fas fa-book-open" aria-hidden="true"></i>My Assignments</h2>
-                    </div>
+                </div>
                     <div class="empty-state">
                         <div class="empty-state-icon">
                             <i class="fas fa-book-open"></i>
-                        </div>
+                </div>
                         <h3 class="empty-state-title">No Assignments Available</h3>
                         <p class="empty-state-description">No assignments have been posted yet. Check back later for new assignments.</p>
-                    </div>
+            </div>
                 </div>
             `;
         }
-
+        
         return `
             <div class="content-section">
                 <div class="section-header">
@@ -3484,7 +3486,7 @@ function renderStudentAssignments() {
                             <i class="fas fa-check-circle"></i>
                             Submitted: ${userSubmissions.length}
                         </span>
-                    </div>
+                </div>
                 </div>
                 
                 <div class="assignment-filters">
@@ -3608,7 +3610,7 @@ async function testAssignmentsLoading() {
     console.log('🧪 Testing assignments loading...');
     console.log('Current assignments:', assignments);
     console.log('Current submissions:', submissions);
-    console.log('Current mcqAssignments:', mcqAssignments);
+    // console.log('Current mcqAssignments:', mcqAssignments); // MCQ removed
     console.log('Current user:', currentUser);
     
     // Load real Firebase data for testing
@@ -3616,11 +3618,11 @@ async function testAssignmentsLoading() {
     try {
         const firebaseAssignments = await getAssignmentsFromFirebase();
         assignments = firebaseAssignments || [];
-        submissions = [];
+    submissions = [];
         // MCQ assignments removed
-        
+    
         console.log('After loading Firebase data:');
-        console.log('Assignments:', assignments);
+    console.log('Assignments:', assignments);
     } catch (error) {
         console.error('Error loading Firebase data:', error);
         assignments = [];
@@ -3754,11 +3756,11 @@ async function testAssignmentsNow() {
     try {
         const firebaseAssignments = await getAssignmentsFromFirebase();
         assignments = firebaseAssignments || [];
-        submissions = [];
+    submissions = [];
         // MCQ assignments removed
-        
-        console.log('Assignments:', assignments);
-        console.log('MCQ Assignments:', mcqAssignments);
+    
+    console.log('Assignments:', assignments);
+        // console.log('MCQ Assignments:', mcqAssignments); // MCQ removed
     } catch (error) {
         console.error('Error loading Firebase data:', error);
         assignments = [];
@@ -5942,54 +5944,55 @@ async function saveProfileName() {
 
 
 
-function renderMCQQuizStats() {
-    if (mcqAssignments.length === 0) {
-        return '<div class="no-data"><i class="fas fa-info-circle"></i>No MCQ quizzes found.</div>';
-    }
+// MCQ functionality removed as per user request
+// function renderMCQQuizStats() {
+//     if (mcqAssignments.length === 0) {
+//         return '<div class="no-data"><i class="fas fa-info-circle"></i>No MCQ quizzes found.</div>';
+//     }
 
-    let statsHTML = '';
+//     let statsHTML = '';
     
-    mcqAssignments.forEach(quiz => {
-        const quizSubmissions = mcqSubmissions.filter(s => s.quizId === quiz.id);
-        const completionRate = quizSubmissions.length;
-        const avgQuizScore = quizSubmissions.length > 0 ? 
-            Math.round(quizSubmissions.reduce((sum, s) => sum + (s.percentage || 0), 0) / quizSubmissions.length) : 0;
+//     mcqAssignments.forEach(quiz => {
+//         const quizSubmissions = mcqSubmissions.filter(s => s.quizId === quiz.id);
+//         const completionRate = quizSubmissions.length;
+//         const avgQuizScore = quizSubmissions.length > 0 ? 
+//             Math.round(quizSubmissions.reduce((sum, s) => sum + (s.percentage || 0), 0) / quizSubmissions.length) : 0;
 
-        statsHTML += `
-            <div class="quiz-stat-card">
-                <div class="quiz-header">
-                    <h4><i class="fas fa-quiz"></i>${quiz.title}</h4>
-                    <div class="quiz-meta">
-                        <span class="quiz-subject">${quiz.subject || 'General'}</span>
-                        <span class="quiz-date">${formatDate(quiz.createdAt)}</span>
-                    </div>
-                </div>
+//         statsHTML += `
+//             <div class="quiz-stat-card">
+//                 <div class="quiz-header">
+//                     <h4><i class="fas fa-quiz"></i>${quiz.title}</h4>
+//                     <div class="quiz-meta">
+//                         <span class="quiz-subject">${quiz.subject || 'General'}</span>
+//                         <span class="quiz-date">${formatDate(quiz.createdAt)}</span>
+//                     </div>
+//                 </div>
                 
-                <div class="quiz-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">Submissions:</span>
-                        <span class="summary-value">${completionRate}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Average Score:</span>
-                        <span class="summary-value">${avgQuizScore}%</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Total Points:</span>
-                        <span class="summary-value">${quiz.totalPoints || 0}</span>
-                    </div>
-                </div>
+//                 <div class="quiz-summary">
+//                     <div class="summary-item">
+//                         <span class="summary-label">Submissions:</span>
+//                         <span class="summary-value">${completionRate}</span>
+//                     </div>
+//                     <div class="summary-item">
+//                         <span class="summary-label">Average Score:</span>
+//                         <span class="summary-value">${avgQuizScore}%</span>
+//                     </div>
+//                     <div class="summary-item">
+//                         <span class="summary-label">Total Points:</span>
+//                         <span class="summary-value">${quiz.totalPoints || 0}</span>
+//                     </div>
+//                 </div>
 
-                <div class="student-submissions">
-                    <h5><i class="fas fa-users"></i>Student Submissions (${completionRate})</h5>
-                    ${renderStudentSubmissions(quizSubmissions, quiz)}
-                </div>
-            </div>
-        `;
-    });
+//                 <div class="student-submissions">
+//                     <h5><i class="fas fa-users"></i>Student Submissions (${completionRate})</h5>
+//                     ${renderStudentSubmissions(quizSubmissions, quiz)}
+//                 </div>
+//             </div>
+//         `;
+//     });
 
-    return statsHTML;
-}
+//     return statsHTML;
+// }
 
 function renderStudentSubmissions(submissions, quiz) {
     if (submissions.length === 0) {
@@ -8265,11 +8268,11 @@ async function saveGrade() {
             
             // Update the submission in Firebase
             const updateData = {
-                grade: score,
-                feedback: feedback,
-                gradedAt: new Date().toISOString(),
+                    grade: score,
+                    feedback: feedback,
+                    gradedAt: new Date().toISOString(),
                 gradedBy: currentUser.id || currentUser.uid,
-                status: 'Graded'
+                    status: 'Graded'
             };
             
             console.log('🔍 Debug - Firebase update data:', updateData);
@@ -8997,35 +9000,36 @@ async function saveMCQQuiz() {
     }
 }
 
-function startMCQQuiz(mcqId) {
-    const mcq = mcqAssignments.find(m => m.id === mcqId);
-    if (!mcq) {
-        showConfirmation('Error', 'MCQ Quiz not found.', 'error');
-        return;
-    }
+// MCQ functionality removed as per user request
+// function startMCQQuiz(mcqId) {
+//     const mcq = mcqAssignments.find(m => m.id === mcqId);
+//     if (!mcq) {
+//         showConfirmation('Error', 'MCQ Quiz not found.', 'error');
+//         return;
+//     }
     
-    // Check if student has already submitted (if retake is not allowed)
-    const existingSubmission = mcqSubmissions.find(s => 
-        s.mcqId === mcqId && s.studentId === currentUser.id
-    );
+//     // Check if student has already submitted (if retake is not allowed)
+//     const existingSubmission = mcqSubmissions.find(s => 
+//         s.mcqId === mcqId && s.studentId === currentUser.id
+//     );
     
-    if (existingSubmission && !mcq.allowRetake) {
-        showConfirmation('Quiz Completed', 'You have already completed this quiz and retakes are not allowed.', 'info');
-        return;
-    }
+//     if (existingSubmission && !mcq.allowRetake) {
+//         showConfirmation('Quiz Completed', 'You have already completed this quiz and retakes are not allowed.', 'info');
+//         return;
+//     }
     
-    // Check if quiz is still available (due date not passed)
-    const now = new Date();
-    const dueDateTime = new Date(`${mcq.dueDate}T${mcq.dueTime}`);
+//     // Check if quiz is still available (due date not passed)
+//     const now = new Date();
+//     const dueDateTime = new Date(`${mcq.dueDate}T${mcq.dueTime}`);
     
-    if (now > dueDateTime) {
-        showConfirmation('Quiz Expired', 'This quiz has expired and is no longer available.', 'error');
-        return;
-    }
+//     if (now > dueDateTime) {
+//         showConfirmation('Quiz Expired', 'This quiz has expired and is no longer available.', 'error');
+//         return;
+//     }
     
-    // Start the quiz
-    openMCQQuizModal(mcq);
-}
+//     // Start the quiz
+//     openMCQQuizModal(mcq);
+// }
 
 function openMCQQuizModal(mcq) {
     let quizTimer = null;
@@ -9437,65 +9441,66 @@ function showMCQResults(mcq, submission, results) {
     window.currentMCQQuiz = null;
 }
 
-function viewMCQDetails(mcqId) {
-    const mcq = mcqAssignments.find(m => m.id === mcqId);
-    if (!mcq) {
-        showConfirmation('Error', 'MCQ Quiz not found.', 'error');
-        return;
-    }
+// MCQ functionality removed as per user request
+// function viewMCQDetails(mcqId) {
+//     const mcq = mcqAssignments.find(m => m.id === mcqId);
+//     if (!mcq) {
+//         showConfirmation('Error', 'MCQ Quiz not found.', 'error');
+//         return;
+//     }
     
-    const modalContent = `
-        <div class="mcq-details-container">
-            <div class="mcq-info">
-                <h3>${mcq.title}</h3>
-                <p class="mcq-description">${mcq.description}</p>
+//     const modalContent = `
+//         <div class="mcq-details-container">
+//             <div class="mcq-info">
+//                 <h3>${mcq.title}</h3>
+//                 <p class="mcq-description">${mcq.description}</p>
                 
-                <div class="mcq-meta-grid">
-                    <div class="meta-item">
-                        <i class="fas fa-book"></i>
-                        <span><strong>Subject:</strong> ${mcq.subject}</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span><strong>Due Date:</strong> ${formatDate(mcq.dueDate)} ${mcq.dueTime ? `at ${formatTime(mcq.dueTime)}` : ''}</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-clock"></i>
-                        <span><strong>Time Limit:</strong> ${mcq.timeLimit} minutes</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-star"></i>
-                        <span><strong>Total Points:</strong> ${mcq.totalPoints}</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-question-circle"></i>
-                        <span><strong>Questions:</strong> ${mcq.questions.length}</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-redo"></i>
-                        <span><strong>Retakes:</strong> ${mcq.allowRetake ? 'Allowed' : 'Not Allowed'}</span>
-                    </div>
-                </div>
+//                 <div class="mcq-meta-grid">
+//                     <div class="meta-item">
+//                         <i class="fas fa-book"></i>
+//                         <span><strong>Subject:</strong> ${mcq.subject}</span>
+//                     </div>
+//                     <div class="meta-item">
+//                         <i class="fas fa-calendar-alt"></i>
+//                         <span><strong>Due Date:</strong> ${formatDate(mcq.dueDate)} ${mcq.dueTime ? `at ${formatTime(mcq.dueTime)}` : ''}</span>
+//                     </div>
+//                     <div class="meta-item">
+//                         <i class="fas fa-clock"></i>
+//                         <span><strong>Time Limit:</strong> ${mcq.timeLimit} minutes</span>
+//                     </div>
+//                     <div class="meta-item">
+//                         <i class="fas fa-star"></i>
+//                         <span><strong>Total Points:</strong> ${mcq.totalPoints}</span>
+//                     </div>
+//                     <div class="meta-item">
+//                         <i class="fas fa-question-circle"></i>
+//                         <span><strong>Questions:</strong> ${mcq.questions.length}</span>
+//                     </div>
+//                     <div class="meta-item">
+//                         <i class="fas fa-redo"></i>
+//                         <span><strong>Retakes:</strong> ${mcq.allowRetake ? 'Allowed' : 'Not Allowed'}</span>
+//                     </div>
+//                 </div>
                 
-                <div class="quiz-instructions">
-                    <h4><i class="fas fa-info-circle"></i> Instructions</h4>
-                    <ul>
-                        <li>You have <strong>${mcq.timeLimit} minutes</strong> to complete this quiz</li>
-                        <li>The quiz contains <strong>${mcq.questions.length} questions</strong> worth <strong>${mcq.totalPoints} points</strong> total</li>
-                        <li>You can navigate between questions using the navigation buttons</li>
-                        <li>Your answers are automatically saved as you progress</li>
-                        <li>${mcq.allowRetake ? 'You can retake this quiz if needed' : 'You can only take this quiz once'}</li>
-                        <li>${mcq.showCorrectAnswers ? 'Correct answers will be shown after submission' : 'Results will be available after the quiz deadline'}</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    `;
+//                 <div class="quiz-instructions">
+//                     <h4><i class="fas fa-info-circle"></i> Instructions</h4>
+//                     <ul>
+//                         <li>You have <strong>${mcq.timeLimit} minutes</strong> to complete this quiz</li>
+//                         <li>The quiz contains <strong>${mcq.questions.length} questions</strong> worth <strong>${mcq.totalPoints} points</strong> total</li>
+//                         <li>You can navigate between questions using the navigation buttons</li>
+//                         <li>Your answers are automatically saved as you progress</li>
+//                         <li>${mcq.allowRetake ? 'You can retake this quiz if needed' : 'You can only take this quiz once'}</li>
+//                         <li>${mcq.showCorrectAnswers ? 'Correct answers will be shown after submission' : 'Results will be available after the quiz deadline'}</li>
+//                     </ul>
+//                 </div>
+//             </div>
+//         </div>
+//     `;
     
-    document.getElementById('mcqModalTitle').textContent = 'Quiz Details';
-    document.getElementById('mcqModalContent').innerHTML = modalContent;
-    document.getElementById('mcqModal').classList.remove('hidden');
-}
+//     document.getElementById('mcqModalTitle').textContent = 'Quiz Details';
+//     document.getElementById('mcqModalContent').innerHTML = modalContent;
+//     document.getElementById('mcqModal').classList.remove('hidden');
+// }
 
 function viewMCQResults(submissionId) {
     const submission = mcqSubmissions.find(s => s.id === submissionId);
