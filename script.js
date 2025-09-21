@@ -7238,7 +7238,7 @@ async function logout() {
             
             showLoginPage();
             
-            showAlert('You have been safely logged out of the system. Thank you for using AssignmentHub!', 'info');
+            showAlert('You have been safely logged out of the system. Thank you for using E-Workspace!', 'info');
             
             // Announce for screen readers
             if (window.announcePageChange) {

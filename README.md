@@ -1,4 +1,4 @@
-# AssignmentHub - Student & Staff Management System
+# E-Workspace - Student & Staff Management System
 
 A modern web application for managing student assignments, applications, and announcements. Built with vanilla HTML, CSS, and JavaScript.
 
