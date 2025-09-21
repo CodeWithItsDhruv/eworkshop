@@ -4322,6 +4322,75 @@ function testStaffDashboard() {
     }
 }
 
+// Test function to create a test user for login
+async function createTestUser() {
+    console.log('🧪 Creating test user for login...');
+    
+    const testEmail = 'dhruvrathod376121@gmail.com';
+    const testPassword = '1234567';
+    const testName = 'Dhruv Rathod';
+    const testRole = 'student';
+    
+    try {
+        console.log('🔍 Attempting to create user:', testEmail);
+        const result = await registerUser(testEmail, testPassword, testRole, testName);
+        
+        if (result.success) {
+            console.log('✅ Test user created successfully!');
+            console.log('🔍 User data:', result.user);
+            return true;
+        } else {
+            console.log('❌ Failed to create test user:', result.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error creating test user:', error);
+        return false;
+    }
+}
+
+// Test function to list all users in Firebase
+async function listAllUsers() {
+    console.log('🧪 Listing all users in Firebase...');
+    
+    try {
+        const users = await getUsersFromFirebase();
+        console.log('👥 All users in Firebase:');
+        users.forEach((user, index) => {
+            console.log(`${index + 1}. ${user.name} (${user.email}) - Role: ${user.role} - UID: ${user.uid}`);
+        });
+        return users;
+    } catch (error) {
+        console.error('❌ Error listing users:', error);
+        return [];
+    }
+}
+
+// Test function to check authentication status
+async function checkAuthStatus() {
+    console.log('🧪 Checking authentication status...');
+    
+    try {
+        if (firebaseAuth) {
+            const user = firebaseAuth.currentUser;
+            if (user) {
+                console.log('✅ User is authenticated:', user.email);
+                console.log('🔍 User UID:', user.uid);
+                return user;
+            } else {
+                console.log('❌ No user is currently authenticated');
+                return null;
+            }
+        } else {
+            console.log('❌ Firebase Auth not initialized');
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error checking auth status:', error);
+        return null;
+    }
+}
+
 // Make test functions available globally
 window.testFirebaseConnectivity = testFirebaseConnectivity;
 window.testAssignmentCreation = testAssignmentCreation;
@@ -4334,6 +4403,9 @@ window.forceLoadAndDisplayAssignments = forceLoadAndDisplayAssignments;
 window.testStudentSubmission = testStudentSubmission;
 window.testStaffPortal = testStaffPortal;
 window.testStaffDashboard = testStaffDashboard;
+window.createTestUser = createTestUser;
+window.listAllUsers = listAllUsers;
+window.checkAuthStatus = checkAuthStatus;
 
 function renderStaffAssignments() {
     const submissionCounts = assignments.map(assignment => {
