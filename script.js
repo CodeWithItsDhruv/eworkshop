@@ -1,3 +1,19 @@
+// ===== APPLICATION CONFIGURATION =====
+// Debug mode configuration
+const DEBUG_MODE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Debug logging function
+function debugLog(message, ...args) {
+    if (DEBUG_MODE) {
+        console.log(message, ...args);
+    }
+}
+
+// Error logging function (always logs errors)
+function errorLog(message, ...args) {
+    console.error(message, ...args);
+}
+
 // ===== FIREBASE INTEGRATION =====
 // Firebase configuration and initialization
 let firebaseAuth, firebaseDb;
@@ -20,6 +36,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
 });
 
+// ===== SECURITY UTILITIES =====
+// Input sanitization functions to prevent XSS attacks
+
+/**
+ * Sanitize HTML content to prevent XSS attacks
+ * @param {string} str - String to sanitize
+ * @returns {string} - Sanitized string
+ */
+function sanitizeHTML(str) {
+    if (typeof str !== 'string') return '';
+    
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/**
+ * Sanitize user input for safe display
+ * @param {string} input - User input to sanitize
+ * @returns {string} - Sanitized input
+ */
+function sanitizeInput(input) {
+    if (typeof input !== 'string') return '';
+    return input.trim().replace(/[<>]/g, '');
+}
+
+/**
+ * Validate email format
+ * @param {string} email - Email to validate
+ * @returns {boolean} - True if valid
+ */
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+/**
+ * Validate password strength
+ * @param {string} password - Password to validate
+ * @returns {object} - Validation result
+ */
+function validatePassword(password) {
+    const errors = [];
+    
+    if (password.length < 6) {
+        errors.push('Password must be at least 6 characters long');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
+/**
+ * Validate score input
+ * @param {number} score - Score to validate
+ * @param {number} maxScore - Maximum possible score
+ * @returns {object} - Validation result
+ */
+function validateScore(score, maxScore = 100) {
+    const numScore = parseFloat(score);
+    
+    if (isNaN(numScore)) {
+        return { isValid: false, error: 'Score must be a valid number' };
+    }
+    
+    if (numScore < 0) {
+        return { isValid: false, error: 'Score cannot be negative' };
+    }
+    
+    if (numScore > maxScore) {
+        return { isValid: false, error: `Score cannot exceed ${maxScore} points` };
+    }
+    
+    return { isValid: true, score: numScore };
+}
+
 // ===== UI UTILITIES =====
 // Show alert/notification function
 function showAlert(message, type = 'info', duration = 5000) {
@@ -35,7 +141,7 @@ function showAlert(message, type = 'info', duration = 5000) {
             <i class="fas ${getAlertIcon(type)}"></i>
         </div>
         <div class="alert-content">
-            <div class="alert-message">${message}</div>
+            <div class="alert-message">${sanitizeHTML(message)}</div>
         </div>
         <button type="button" class="alert-close" onclick="this.parentElement.remove()">
             <i class="fas fa-times"></i>
@@ -240,6 +346,21 @@ document.head.appendChild(style);
 async function registerUser(email, password, role, name = null) {
     try {
         console.log(`🔄 Registering new ${role} user: ${email}`);
+        
+        // Validate email format
+        if (!isValidEmail(email)) {
+            throw new Error('Please enter a valid email address');
+        }
+        
+        // Validate password strength
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
+        }
+        
+        // Sanitize inputs
+        email = sanitizeInput(email);
+        name = name ? sanitizeInput(name) : email.split('@')[0];
         
         // Validate and set default role
         if (!role || (role !== 'student' && role !== 'staff')) {
@@ -7758,20 +7879,46 @@ async function saveAssignment() {
     const form = document.getElementById('createAssignmentForm');
     const formData = new FormData(form);
     
+    // Sanitize all inputs
+    const title = sanitizeInput(formData.get('title'));
+    const description = sanitizeInput(formData.get('description'));
+    const subject = sanitizeInput(formData.get('subject'));
+    const dueDate = formData.get('dueDate');
+    const dueTime = formData.get('dueTime');
+    const maxScore = parseInt(formData.get('maxScore'));
+    
     // Validation
-    if (!formData.get('title') || !formData.get('subject') || !formData.get('description') || 
-        !formData.get('dueDate') || !formData.get('dueTime') || !formData.get('maxScore')) {
+    if (!title || !subject || !description || !dueDate || !dueTime || !maxScore) {
         showConfirmation('Validation Error', 'Please fill in all required fields.', 'error');
         return;
     }
     
+    // Validate title length
+    if (title.length < 3) {
+        showConfirmation('Validation Error', 'Title must be at least 3 characters long.', 'error');
+        return;
+    }
+    
+    // Validate description length
+    if (description.length < 10) {
+        showConfirmation('Validation Error', 'Description must be at least 10 characters long.', 'error');
+        return;
+    }
+    
+    // Validate max score
+    const scoreValidation = validateScore(maxScore, 1000); // Allow up to 1000 points
+    if (!scoreValidation.isValid) {
+        showConfirmation('Validation Error', scoreValidation.error, 'error');
+        return;
+    }
+    
     const assignmentData = {
-        title: formData.get('title'),
-        subject: formData.get('subject'),
-        description: formData.get('description'),
-        dueDate: formData.get('dueDate'),
-        dueTime: formData.get('dueTime'),
-        maxScore: parseInt(formData.get('maxScore'))
+        title: title,
+        subject: subject,
+        description: description,
+        dueDate: dueDate,
+        dueTime: dueTime,
+        maxScore: maxScore
     };
     
     try {
@@ -8031,10 +8178,16 @@ async function submitAssignment() {
     const form = document.getElementById('submissionForm');
     const formData = new FormData(form);
     const assignmentId = formData.get('assignmentId');
-    const submissionText = formData.get('submissionText');
+    const submissionText = sanitizeInput(formData.get('submissionText'));
     
     if (!submissionText.trim()) {
         showConfirmation('Validation Error', 'Please enter your solution/answer.', 'error');
+        return;
+    }
+    
+    // Validate submission length
+    if (submissionText.length < 10) {
+        showConfirmation('Validation Error', 'Submission must be at least 10 characters long.', 'error');
         return;
     }
     
@@ -8283,14 +8436,19 @@ async function saveGrade() {
     const formData = new FormData(form);
     const submissionId = formData.get('submissionId');
     const score = parseFloat(formData.get('score'));
-    const feedback = formData.get('feedback');
+    const feedback = sanitizeInput(formData.get('feedback') || '');
     
     console.log('🔍 Debug - Grade data:', { submissionId, score, feedback });
     
-    if (isNaN(score) || score < 0) {
-        showConfirmation('Validation Error', 'Please enter a valid score.', 'error');
+    // Validate score using the new validation function
+    const scoreValidation = validateScore(score, assignment.maxScore);
+    if (!scoreValidation.isValid) {
+        showConfirmation('Validation Error', scoreValidation.error, 'error');
         return;
     }
+    
+    // Use the validated score
+    score = scoreValidation.score;
     
     const submissionIndex = submissions.findIndex(s => s.id === submissionId);
     if (submissionIndex === -1) {

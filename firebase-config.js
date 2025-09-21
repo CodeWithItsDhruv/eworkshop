@@ -1,14 +1,33 @@
 // ===== FIREBASE CONFIGURATION =====
 // Your Firebase project configuration
+
+// Function to get environment variable with fallback
+function getEnvVar(key, fallback = '') {
+    // Check if we're in a build environment (Vite)
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+        return import.meta.env[key] || fallback;
+    }
+    // Check for process.env (Node.js environment)
+    if (typeof process !== 'undefined' && process.env) {
+        return process.env[key] || fallback;
+    }
+    // Fallback to window variables (browser)
+    if (typeof window !== 'undefined' && window.env) {
+        return window.env[key] || fallback;
+    }
+    return fallback;
+}
+
+// Load configuration from environment variables with fallbacks
 const firebaseConfig = {
-    apiKey: "AIzaSyCLCYkgj1YAVBK_1GZJi3IzOLOywVhi7AE",
-    authDomain: "eworkspace-a18a3.firebaseapp.com",
-    databaseURL: "https://eworkspace-a18a3-default-rtdb.firebaseio.com",
-    projectId: "eworkspace-a18a3",
-    storageBucket: "eworkspace-a18a3.firebasestorage.app",
-    messagingSenderId: "237591179986",
-    appId: "1:237591179986:web:69c8e0ee1b8df87fc8330b",
-    measurementId: "G-NLY0LW5QQZ"
+    apiKey: getEnvVar('VITE_FIREBASE_API_KEY', "AIzaSyCLCYkgj1YAVBK_1GZJi3IzOLOywVhi7AE"),
+    authDomain: getEnvVar('VITE_FIREBASE_AUTH_DOMAIN', "eworkspace-a18a3.firebaseapp.com"),
+    databaseURL: getEnvVar('VITE_FIREBASE_DATABASE_URL', "https://eworkspace-a18a3-default-rtdb.firebaseio.com"),
+    projectId: getEnvVar('VITE_FIREBASE_PROJECT_ID', "eworkspace-a18a3"),
+    storageBucket: getEnvVar('VITE_FIREBASE_STORAGE_BUCKET', "eworkspace-a18a3.firebasestorage.app"),
+    messagingSenderId: getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID', "237591179986"),
+    appId: getEnvVar('VITE_FIREBASE_APP_ID', "1:237591179986:web:69c8e0ee1b8df87fc8330b"),
+    measurementId: getEnvVar('VITE_FIREBASE_MEASUREMENT_ID', "G-NLY0LW5QQZ")
 };
 
 // Export the configuration
