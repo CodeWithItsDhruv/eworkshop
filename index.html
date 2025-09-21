@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AssignmentHub - Modern Student & Staff Management System">
+    <title>AssignmentHub - Student & Staff Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Firebase Services Module -->
+    <script src="firebase-services.js"></script>
+    
+    <!-- Firebase Cleanup Utility (for development/maintenance) -->
+    <script src="firebase-cleanup.js"></script>
+    
+    <!-- Firebase SDKs - Production Optimized -->
+    <script type="module">
+      // ===== FIREBASE INITIALIZATION =====
+      // Import only the essential Firebase modules for production
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+      
+      // Get Firebase configuration from external file
+      const firebaseConfig = window.firebaseConfig;
+      
+      // Initialize Firebase app
+      const app = initializeApp(firebaseConfig);
+      
+      // Initialize Firebase services
+      const auth = getAuth(app);
+      
+      // Set persistence to LOCAL (persists even when browser is closed)
+      setPersistence(auth, browserLocalPersistence)
+        .then(() => {
+          console.log('✅ Firebase Auth persistence set to LOCAL');
+        })
+        .catch((error) => {
+          console.error('❌ Error setting persistence:', error);
+        });
+        
+      const db = getDatabase(app);
+      
+      // Make Firebase services available globally for the application
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+      window.firebaseApp = app;
+      
+      console.log('✅ Firebase initialized successfully');
+    </script>
+  </head>
+  <body>
+    <!-- Initial Loading State -->
+    <div id="initialLoadingState" class="initial-loading-state">
+      <div class="initial-loading-content">
+        <div class="logo-large">
+          <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+        </div>
+        <h1>AssignmentHub</h1>
+        <div class="loading" style="width: 40px; height: 40px; margin-top: 20px;"></div>
+      </div>
+    </div>
+    
+    <!-- Login Page -->
+    <div id="loginPage" class="page">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="logo-container">
+                        <div class="logo">
+                            <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <h1>AssignmentHub</h1>
+                    <p>Student & Staff Management System</p>
+                </div>
+                
+                <div class="login-form">
+                    <div class="form-header">
+                        <h2>Welcome Back</h2>
+                        <p>Please sign in to your account</p>
+                    </div>
+                    
+                    <!-- Firebase Auth Status Messages -->
+                    <div id="authStatus" class="auth-status hidden"></div>
+                    
+                    <form id="loginForm" novalidate>
+                        <div class="role-selection">
+                            <label for="role-student" class="role-label">Select Your Role</label>
+                            <div class="role-buttons" role="group" aria-label="Role selection">
+                                <button type="button" id="role-student" class="role-btn active" data-role="student" aria-pressed="true">
+                                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                    <span>Student</span>
+                                </button>
+                                <button type="button" id="role-staff" class="role-btn" data-role="staff" aria-pressed="false">
+                                    <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                                    <span>Staff</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email"
+                                    class="form-input" 
+                                    placeholder="Enter your email address"
+                                    required 
+                                    autocomplete="email"
+                                    aria-describedby="email-error"
+                                >
+                            </div>
+                            <div id="email-error" class="error-message" aria-live="polite"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <i class="fas fa-lock input-icon" aria-hidden="true"></i>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password"
+                                    class="form-input" 
+                                    placeholder="Enter your password"
+                                    required 
+                                    autocomplete="current-password"
+                                    aria-describedby="password-error password-hint"
+                                >
+                            </div>
+                            <p id="password-hint" class="form-hint">Students use their phone number as password</p>
+                            <div id="password-error" class="error-message" aria-live="polite"></div>
+                        </div>
+                        
+                        <div id="loginError" class="error-message hidden" aria-live="polite"></div>
+                        
+                        <button type="submit" class="btn btn-primary btn-full login-btn" aria-describedby="login-error">
+                            <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                            <span>Sign In</span>
+                        </button>
+                    </form>
+                    
+                    <!-- Registration Section -->
+                    <div class="registration-section">
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+                        <p class="registration-title">New User? Create Account</p>
+                        <button type="button" id="showRegisterBtn" class="btn btn-secondary btn-full register-btn" onclick="toggleRegistrationForm()">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i>
+                            <span>Register</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="login-footer">
+                <p>&copy; 2025 AssignmentHub. All rights reserved.</p>
+            </div>
+        </div>
+        
+        <!-- Registration Form (Hidden by default) -->
+        <div id="registerFormContainer" class="hidden">
+            <div class="login-card register-card">
+                <div class="login-header">
+                    <div class="logo-container">
+                        <div class="logo">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <h1>Create Account</h1>
+                    <p>Join AssignmentHub today</p>
+                </div>
+                
+                <form id="registerForm" novalidate>
+                    <div class="form-header">
+                        <h2>Sign Up</h2>
+                        <p>Please fill in the details below</p>
+                    </div>
+                    
+                    <div class="role-selection">
+                        <label for="register-role-student" class="role-label">Select Your Role</label>
+                        <div class="role-buttons" role="group" aria-label="Role selection">
+                            <button type="button" id="register-role-student" class="role-btn active" data-role="student" aria-pressed="true">
+                                <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                <span>Student</span>
+                            </button>
+                            <button type="button" id="register-role-staff" class="role-btn" data-role="staff" aria-pressed="false">
+                                <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                                <span>Staff</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerName" class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user input-icon" aria-hidden="true"></i>
+                            <input 
+                                type="text" 
+                                id="registerName" 
+                                name="name"
+                                class="form-input" 
+                                placeholder="Enter your full name"
+                                required 
+                                autocomplete="name"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+                            <input 
+                                type="email" 
+                                id="registerEmail" 
+                                name="email"
+                                class="form-input" 
+                                placeholder="Enter your email address"
+                                required 
+                                autocomplete="email"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <div class="input-group">
+                                <i class="fas fa-lock input-icon" aria-hidden="true"></i>
+                                <input 
+                                    type="password" 
+                                    id="registerPassword" 
+                                    name="password"
+                                    class="form-input" 
+                                    placeholder="Min. 6 characters"
+                                    required 
+                                    autocomplete="new-password"
+                                    minlength="6"
+                                >
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <i class="fas fa-lock input-icon" aria-hidden="true"></i>
+                                <input 
+                                    type="password" 
+                                    id="confirmPassword" 
+                                    name="confirmPassword"
+                                    class="form-input" 
+                                    placeholder="Confirm password"
+                                    required 
+                                    autocomplete="new-password"
+                                    minlength="6"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="registerError" class="error-message hidden" aria-live="polite"></div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full register-btn">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        <span>Create Account</span>
+                    </button>
+                    
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary btn-full back-btn" onclick="toggleRegistrationForm()">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        <span>Back to Login</span>
+                    </button>
+                </form>
+                
+                <div class="login-footer">
+                    <p>&copy; 2025 AssignmentHub. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+                
+                <!-- Removed demo-section as per request -->
+            </div>
+        </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="page">
+        <!-- Header -->
+        <header class="header" role="banner">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo-small" aria-label="AssignmentHub Logo">
+                        <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                    </div>
+                    <div class="brand-info">
+                        <h1 class="brand-title">AssignmentHub</h1>
+                        <p id="userRole" class="brand-subtitle">Student Portal</p>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="notifications">
+                        <button id="notificationBtn" class="notification-btn" aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
+                            <i class="fas fa-bell" aria-hidden="true"></i>
+                            <span id="notificationCount" class="notification-count" aria-label="0 unread notifications">0</span>
+                        </button>
+                        <div id="notificationPanel" class="notification-panel hidden" role="menu" aria-labelledby="notificationBtn">
+                            <div class="notification-header">
+                                <h3>Notifications</h3>
+                                <button type="button" class="btn-clear" onclick="clearAllNotifications()" aria-label="Clear all notifications">
+                                    Clear All
+                                </button>
+                            </div>
+                            <div id="notificationList" class="notification-list" role="listbox"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-avatar" aria-label="User avatar">
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                            </div>
+                            <div class="user-details">
+                                <p id="userName" class="user-name">User Name</p>
+                                <p id="userEmail" class="user-email">user@email.com</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="logout()" class="logout-btn" title="Logout" aria-label="Logout">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="app-container">
+            <!-- Navigation -->
+            <nav class="navigation" role="navigation" aria-label="Main navigation">
+                <ul id="navList" class="nav-list" role="menubar"></ul>
+            </nav>
+            
+            <!-- Main Content -->
+            <main class="main-content" role="main">
+                <div id="contentArea" class="content-wrapper"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal hidden" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Title</h3>
+                <button type="button" onclick="closeModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage" class="modal-message">Message</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Submission Modal -->
+    <div id="assignmentModal" class="modal hidden" role="dialog" aria-labelledby="assignmentModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="assignmentModalTitle" class="modal-title">Submit Assignment</h3>
+                <button type="button" onclick="closeAssignmentModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="assignmentModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCQ Quiz Modal -->
+    <div id="mcqModal" class="modal hidden" role="dialog" aria-labelledby="mcqModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="mcqModalTitle" class="modal-title">MCQ Quiz</h3>
+                <button type="button" onclick="closeMCQModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="mcqModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create MCQ Quiz Modal -->
+    <div id="createMCQModal" class="modal hidden" role="dialog" aria-labelledby="createMCQTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="createMCQTitle" class="modal-title">Create New MCQ Quiz</h3>
+                <button type="button" onclick="closeCreateMCQModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createMCQForm">
+                    <div class="form-group">
+                        <label for="mcqTitle" class="form-label">Quiz Title *</label>
+                        <input type="text" id="mcqTitle" name="title" class="form-input" required 
+                               placeholder="Enter quiz title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mcqSubject" class="form-label">Subject *</label>
+                        <select id="mcqSubject" name="subject" class="form-input" required>
+                            <option value="">Select Subject</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Programming">Programming</option>
+                            <option value="Database Systems">Database Systems</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                            <option value="Data Structures">Data Structures</option>
+                            <option value="Computer Networks">Computer Networks</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mcqDescription" class="form-label">Description *</label>
+                        <textarea id="mcqDescription" name="description" class="form-input" required
+                                  placeholder="Enter quiz description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mcqDueDate" class="form-label">Due Date *</label>
+                            <input type="date" id="mcqDueDate" name="dueDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="mcqDueTime" class="form-label">Due Time *</label>
+                            <input type="time" id="mcqDueTime" name="dueTime" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mcqTimeLimit" class="form-label">Time Limit (minutes) *</label>
+                            <input type="number" id="mcqTimeLimit" name="timeLimit" class="form-input" required
+                                   placeholder="30" min="1" max="180">
+                        </div>
+                        <div class="form-group">
+                            <label for="mcqTotalPoints" class="form-label">Total Points *</label>
+                            <input type="number" id="mcqTotalPoints" name="totalPoints" class="form-input" required
+                                   placeholder="100" min="1" max="1000" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="mcqAllowRetake" name="allowRetake" class="form-checkbox">
+                                <label for="mcqAllowRetake" class="form-label">Allow Retake</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="mcqShowCorrectAnswers" name="showCorrectAnswers" class="form-checkbox" checked>
+                                <label for="mcqShowCorrectAnswers" class="form-label">Show Correct Answers After Submission</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h4>Questions</h4>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addMCQQuestion()">
+                                <i class="fas fa-plus"></i> Add Question
+                            </button>
+                        </div>
+                        <div id="mcqQuestionsContainer" class="questions-container">
+                            <!-- Questions will be added dynamically -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeCreateMCQModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="saveMCQQuiz()" class="btn btn-primary">Create Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Assignment Modal -->
+    <div id="createAssignmentModal" class="modal hidden" role="dialog" aria-labelledby="createAssignmentTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="createAssignmentTitle" class="modal-title">Create New Assignment</h3>
+                <button type="button" onclick="closeCreateAssignmentModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createAssignmentForm">
+                    <div class="form-group">
+                        <label for="assignmentTitle" class="form-label">Assignment Title *</label>
+                        <input type="text" id="assignmentTitle" name="title" class="form-input" required 
+                               placeholder="Enter assignment title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignmentSubject" class="form-label">Subject *</label>
+                        <select id="assignmentSubject" name="subject" class="form-input" required>
+                            <option value="">Select Subject</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Programming">Programming</option>
+                            <option value="Database Systems">Database Systems</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                            <option value="Data Structures">Data Structures</option>
+                            <option value="Computer Networks">Computer Networks</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignmentDescription" class="form-label">Description *</label>
+                        <textarea id="assignmentDescription" name="description" class="form-input" required
+                                  placeholder="Enter detailed assignment description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="assignmentDueDate" class="form-label">Due Date *</label>
+                            <input type="date" id="assignmentDueDate" name="dueDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignmentDueTime" class="form-label">Due Time *</label>
+                            <input type="time" id="assignmentDueTime" name="dueTime" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignmentMaxScore" class="form-label">Maximum Score *</label>
+                        <input type="number" id="assignmentMaxScore" name="maxScore" class="form-input" required
+                               placeholder="100" min="1" max="1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assignmentFile" class="form-label">Attachment (Optional)</label>
+                        <input type="file" id="assignmentFile" name="file" class="form-input"
+                               accept=".pdf,.doc,.docx,.txt,.zip">
+                        <p class="form-hint">Supported formats: PDF, DOC, DOCX, TXT, ZIP</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeCreateAssignmentModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="saveAssignment()" class="btn btn-primary">Create Assignment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Assignment Modal -->
+    <div id="editAssignmentModal" class="modal hidden" role="dialog" aria-labelledby="editAssignmentTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="editAssignmentTitle" class="modal-title">Edit Assignment</h3>
+                <button type="button" onclick="closeEditAssignmentModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editAssignmentForm">
+                    <input type="hidden" id="editAssignmentId" name="id">
+                    <div class="form-group">
+                        <label for="editAssignmentTitle" class="form-label">Assignment Title *</label>
+                        <input type="text" id="editAssignmentTitleInput" name="title" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAssignmentSubject" class="form-label">Subject *</label>
+                        <select id="editAssignmentSubjectSelect" name="subject" class="form-input" required>
+                            <option value="">Select Subject</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Programming">Programming</option>
+                            <option value="Database Systems">Database Systems</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                            <option value="Data Structures">Data Structures</option>
+                            <option value="Computer Networks">Computer Networks</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAssignmentDescription" class="form-label">Description *</label>
+                        <textarea id="editAssignmentDescriptionText" name="description" class="form-input" required rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editAssignmentDueDate" class="form-label">Due Date *</label>
+                            <input type="date" id="editAssignmentDueDateInput" name="dueDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAssignmentDueTime" class="form-label">Due Time *</label>
+                            <input type="time" id="editAssignmentDueTimeInput" name="dueTime" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAssignmentMaxScore" class="form-label">Maximum Score *</label>
+                        <input type="number" id="editAssignmentMaxScoreInput" name="maxScore" class="form-input" required min="1" max="1000">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditAssignmentModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="updateAssignment()" class="btn btn-primary">Update Assignment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Submission Modal -->
+    <div id="submissionModal" class="modal hidden" role="dialog" aria-labelledby="submissionModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="submissionModalTitle" class="modal-title">Submit Assignment</h3>
+                <button type="button" onclick="closeSubmissionModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="submissionAssignmentInfo" class="assignment-info"></div>
+                <form id="submissionForm">
+                    <input type="hidden" id="submissionAssignmentId" name="assignmentId">
+                    
+                    <div class="form-group">
+                        <label for="submissionText" class="form-label">Your Solution/Answer *</label>
+                        <textarea id="submissionText" name="submissionText" class="form-input" required
+                                  placeholder="Enter your solution, answer, or explanation here..." rows="6"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="submissionFile" class="form-label">File Attachment (Optional)</label>
+                        <input type="file" id="submissionFile" name="file" class="form-input"
+                               accept=".pdf,.doc,.docx,.txt,.zip,.jpg,.png">
+                        <p class="form-hint">Supported formats: PDF, DOC, DOCX, TXT, ZIP, JPG, PNG</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeSubmissionModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="submitAssignment()" class="btn btn-primary">Submit Assignment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Submission Modal -->
+    <div id="gradeModal" class="modal hidden" role="dialog" aria-labelledby="gradeModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="gradeModalTitle" class="modal-title">Grade Submission</h3>
+                <button type="button" onclick="closeGradeModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="gradeSubmissionInfo" class="submission-info"></div>
+                <form id="gradeForm">
+                    <input type="hidden" id="gradeSubmissionId" name="submissionId">
+                    
+                    <div class="form-group">
+                        <label for="gradeScore" class="form-label">Score *</label>
+                        <input type="number" id="gradeScore" name="score" class="form-input" required
+                               placeholder="Enter score" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradeFeedback" class="form-label">Feedback (Optional)</label>
+                        <textarea id="gradeFeedback" name="feedback" class="form-input"
+                                  placeholder="Enter feedback for the student..." rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeGradeModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="saveGrade()" class="btn btn-primary">Save Grade</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Submissions Modal -->
+    <div id="viewSubmissionsModal" class="modal hidden" role="dialog" aria-labelledby="viewSubmissionsTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="viewSubmissionsTitle" class="modal-title">Assignment Submissions</h3>
+                <button type="button" onclick="closeViewSubmissionsModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="viewSubmissionsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Submission Modal -->
+    <div id="applicationModal" class="modal hidden" role="dialog" aria-labelledby="applicationModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="applicationModalTitle" class="modal-title">Submit New Application</h3>
+                <button type="button" onclick="closeApplicationModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="applicationForm">
+                    <!-- Student Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Student Information</h4>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="studentFullName" class="form-label">Full Name *</label>
+                                <input type="text" id="studentFullName" name="fullName" class="form-input" required 
+                                       placeholder="Enter your full name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="studentPhone" class="form-label">Phone Number *</label>
+                                <input type="tel" id="studentPhone" name="phone" class="form-input" required 
+                                       placeholder="Enter your phone number">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="studentEnrollment" class="form-label">Enrollment Number *</label>
+                                <input type="text" id="studentEnrollment" name="enrollmentNumber" class="form-input" required 
+                                       placeholder="Enter your enrollment number">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="studentEmail" class="form-label">Email *</label>
+                                <input type="email" id="studentEmail" name="email" class="form-input" required 
+                                       placeholder="Enter your email address">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="studentClass" class="form-label">Class *</label>
+                                <input type="text" id="studentClass" name="class" class="form-input" required 
+                                       placeholder="Enter your class (e.g., BCA, MCA)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="studentSemester" class="form-label">Semester *</label>
+                                <select id="studentSemester" name="semester" class="form-input" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="studentFaculty" class="form-label">Faculty *</label>
+                            <select id="studentFaculty" name="faculty" class="form-input" required>
+                                <option value="">Select Faculty</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Management">Management</option>
+                                <option value="Commerce">Commerce</option>
+                                <option value="Arts">Arts</option>
+                                <option value="Science">Science</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Application Details Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Application Details</h4>
+                        
+                        <div class="form-group">
+                            <label for="applicationType" class="form-label">Application Type *</label>
+                            <select id="applicationType" name="type" class="form-input" required>
+                                <option value="">Select Application Type</option>
+                                <option value="leave">Leave Request</option>
+                                <option value="internship">Internship</option>
+                                <option value="scholarship">Scholarship</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="applicationTitle" class="form-label">Title *</label>
+                            <input type="text" id="applicationTitle" name="title" class="form-input" required 
+                                   placeholder="Enter application title">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="applicationDescription" class="form-label">Description/Reason *</label>
+                            <textarea id="applicationDescription" name="description" class="form-input" required
+                                      placeholder="Provide detailed description or reason for your application..." rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="applicationFile" class="form-label">File Attachment (Optional)</label>
+                            <input type="file" id="applicationFile" name="file" class="form-input"
+                                   accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                            <p class="form-hint">Supported formats: PDF, DOC, DOCX, TXT, JPG, PNG</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeApplicationModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="submitApplication()" class="btn btn-primary">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Application Modal -->
+    <div id="viewApplicationModal" class="modal hidden" role="dialog" aria-labelledby="viewApplicationTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="viewApplicationTitle" class="modal-title">Application Details</h3>
+                <button type="button" onclick="closeViewApplicationModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="viewApplicationContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Review Modal (Staff Only) -->
+    <div id="applicationReviewModal" class="modal hidden" role="dialog" aria-labelledby="applicationReviewTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="applicationReviewTitle" class="modal-title">Review Application</h3>
+                <button type="button" onclick="closeApplicationReviewModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationReviewContent"></div>
+                <form id="applicationReviewForm">
+                    <input type="hidden" id="reviewApplicationId" name="applicationId">
+                    <div class="form-group">
+                        <label for="reviewComment" class="form-label">Review Comment</label>
+                        <textarea id="reviewComment" name="comment" class="form-input"
+                                  placeholder="Enter your review comment..." rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeApplicationReviewModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="approveApplicationWithComment()" class="btn btn-primary">Approve</button>
+                <button type="button" onclick="rejectApplicationWithComment()" class="btn btn-danger">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement Creation Modal (Staff Only) -->
+    <div id="announcementModal" class="modal hidden" role="dialog" aria-labelledby="announcementModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="announcementModalTitle" class="modal-title">Create New Announcement</h3>
+                <button type="button" onclick="closeAnnouncementModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="announcementForm">
+                    <div class="form-group">
+                        <label for="announcementTitle" class="form-label">Title *</label>
+                        <input type="text" id="announcementTitle" name="title" class="form-input" required
+                               placeholder="Enter announcement title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcementMessage" class="form-label">Message/Description *</label>
+                        <textarea id="announcementMessage" name="message" class="form-input" required
+                                  placeholder="Enter announcement message or description..." rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="announcementType" class="form-label">Type</label>
+                            <select id="announcementType" name="type" class="form-input">
+                                <option value="general">General</option>
+                                <option value="event">Event</option>
+                                <option value="academic">Academic</option>
+                                <option value="important">Important</option>
+                                <option value="reminder">Reminder</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="announcementPriority" class="form-label">Priority</label>
+                            <select id="announcementPriority" name="priority" class="form-input">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcementTarget" class="form-label">Target Audience</label>
+                        <select id="announcementTarget" name="targetAudience" class="form-input">
+                            <option value="all">All Users</option>
+                            <option value="students">Students Only</option>
+                            <option value="staff">Staff Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcementAttachment" class="form-label">File/Link Attachment (Optional)</label>
+                        <input type="file" id="announcementAttachment" name="attachment" class="form-input"
+                               accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                        <p class="form-hint">Supported formats: PDF, DOC, DOCX, TXT, JPG, PNG</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcementLink" class="form-label">External Link (Optional)</label>
+                        <input type="url" id="announcementLink" name="link" class="form-input"
+                               placeholder="https://example.com">
+                        <p class="form-hint">Enter a valid URL if you want to link to external content</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeAnnouncementModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="submitAnnouncement()" class="btn btn-primary">Create Announcement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement Edit Modal (Staff Only) -->
+    <div id="editAnnouncementModal" class="modal hidden" role="dialog" aria-labelledby="editAnnouncementModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="editAnnouncementModalTitle" class="modal-title">Edit Announcement</h3>
+                <button type="button" onclick="closeEditAnnouncementModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">    
+                <form id="editAnnouncementForm">
+                    <input type="hidden" id="editAnnouncementId" name="announcementId">
+                    <div class="form-group">
+                        <label for="editAnnouncementTitle" class="form-label">Title *</label>
+                        <input type="text" id="editAnnouncementTitle" name="title" class="form-input" required
+                               placeholder="Enter announcement title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAnnouncementMessage" class="form-label">Message/Description *</label>
+                        <textarea id="editAnnouncementMessage" name="message" class="form-input" required
+                                  placeholder="Enter announcement message or description..." rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editAnnouncementType" class="form-label">Type</label>
+                            <select id="editAnnouncementType" name="type" class="form-input">
+                                <option value="general">General</option>
+                                <option value="event">Event</option>
+                                <option value="academic">Academic</option>
+                                <option value="important">Important</option>
+                                <option value="reminder">Reminder</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editAnnouncementPriority" class="form-label">Priority</label>
+                            <select id="editAnnouncementPriority" name="priority" class="form-input">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAnnouncementTarget" class="form-label">Target Audience</label>
+                        <select id="editAnnouncementTarget" name="targetAudience" class="form-input">
+                            <option value="all">All Users</option>
+                            <option value="students">Students Only</option>
+                            <option value="staff">Staff Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAnnouncementAttachment" class="form-label">File/Link Attachment (Optional)</label>
+                        <input type="file" id="editAnnouncementAttachment" name="attachment" class="form-input"
+                               accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                        <p class="form-hint">Supported formats: PDF, DOC, DOCX, TXT, JPG, PNG</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAnnouncementLink" class="form-label">External Link (Optional)</label>
+                        <input type="url" id="editAnnouncementLink" name="link" class="form-input"
+                               placeholder="https://example.com">
+                        <p class="form-hint">Enter a valid URL if you want to link to external content</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditAnnouncementModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="updateAnnouncement()" class="btn btn-primary">Update Announcement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement View Modal -->
+    <div id="viewAnnouncementModal" class="modal hidden" role="dialog" aria-labelledby="viewAnnouncementModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="viewAnnouncementModalTitle" class="modal-title">Announcement Details</h3>
+                <button type="button" onclick="closeViewAnnouncementModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="viewAnnouncementContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteAnnouncementModal" class="modal hidden" role="dialog" aria-labelledby="deleteAnnouncementModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deleteAnnouncementModalTitle" class="modal-title">Delete Announcement</h3>
+                <button type="button" onclick="closeDeleteAnnouncementModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this announcement?</p>
+                <p class="delete-warning">This action cannot be undone.</p>
+                <input type="hidden" id="deleteAnnouncementId" name="announcementId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeDeleteAnnouncementModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="confirmDeleteAnnouncement()" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Creation Modal (Staff Only) -->
+    <div id="scheduleModal" class="modal hidden" role="dialog" aria-labelledby="scheduleModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="scheduleModalTitle" class="modal-title">Create New Schedule Event</h3>
+                <button type="button" onclick="closeScheduleModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="form-group">
+                        <label for="scheduleTitle" class="form-label">Title *</label>
+                        <input type="text" id="scheduleTitle" name="title" class="form-input" required
+                               placeholder="Enter event title (e.g., Assignment Deadline, Exam, Lecture)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduleDescription" class="form-label">Description</label>
+                        <textarea id="scheduleDescription" name="description" class="form-input"
+                                  placeholder="Enter event description or additional details..." rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scheduleDate" class="form-label">Date *</label>
+                            <input type="date" id="scheduleDate" name="date" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scheduleTime" class="form-label">Time *</label>
+                            <input type="time" id="scheduleTime" name="time" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduleCategory" class="form-label">Category *</label>
+                        <select id="scheduleCategory" name="category" class="form-input" required>
+                            <option value="">Select Category</option>
+                            <option value="exam">Exam</option>
+                            <option value="lecture">Lecture</option>
+                            <option value="assignment">Assignment</option>
+                            <option value="event">Event</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduleLocation" class="form-label">Location (Optional)</label>
+                        <input type="text" id="scheduleLocation" name="location" class="form-input"
+                               placeholder="Enter location (e.g., Room 101, Online, Library)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="schedulePriority" class="form-label">Priority</label>
+                        <select id="schedulePriority" name="priority" class="form-input">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeScheduleModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="submitSchedule()" class="btn btn-primary">Create Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Edit Modal (Staff Only) -->
+    <div id="editScheduleModal" class="modal hidden" role="dialog" aria-labelledby="editScheduleModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="editScheduleModalTitle" class="modal-title">Edit Schedule Event</h3>
+                <button type="button" onclick="closeEditScheduleModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editScheduleForm">
+                    <input type="hidden" id="editScheduleId" name="scheduleId">
+                    <div class="form-group">
+                        <label for="editScheduleTitle" class="form-label">Title *</label>
+                        <input type="text" id="editScheduleTitle" name="title" class="form-input" required
+                               placeholder="Enter event title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editScheduleDescription" class="form-label">Description</label>
+                        <textarea id="editScheduleDescription" name="description" class="form-input"
+                                  placeholder="Enter event description..." rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editScheduleDate" class="form-label">Date *</label>
+                            <input type="date" id="editScheduleDate" name="date" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editScheduleTime" class="form-label">Time *</label>
+                            <input type="time" id="editScheduleTime" name="time" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editScheduleCategory" class="form-label">Category *</label>
+                        <select id="editScheduleCategory" name="category" class="form-input" required>
+                            <option value="exam">Exam</option>
+                            <option value="lecture">Lecture</option>
+                            <option value="assignment">Assignment</option>
+                            <option value="event">Event</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editScheduleLocation" class="form-label">Location (Optional)</label>
+                        <input type="text" id="editScheduleLocation" name="location" class="form-input"
+                               placeholder="Enter location">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editSchedulePriority" class="form-label">Priority</label>
+                        <select id="editSchedulePriority" name="priority" class="form-input">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditScheduleModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="updateSchedule()" class="btn btn-primary">Update Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule View Modal -->
+    <div id="viewScheduleModal" class="modal hidden" role="dialog" aria-labelledby="viewScheduleModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="viewScheduleModalTitle" class="modal-title">Schedule Event Details</h3>
+                <button type="button" onclick="closeViewScheduleModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="viewScheduleContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Schedule Confirmation Modal -->
+    <div id="deleteScheduleModal" class="modal hidden" role="dialog" aria-labelledby="deleteScheduleModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deleteScheduleModalTitle" class="modal-title">Delete Schedule Event</h3>
+                <button type="button" onclick="closeDeleteScheduleModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this schedule event?</p>
+                <p class="delete-warning">This action cannot be undone.</p>
+                <input type="hidden" id="deleteScheduleId" name="scheduleId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeDeleteScheduleModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="confirmDeleteSchedule()" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal hidden" role="dialog" aria-labelledby="changePasswordModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="changePasswordModalTitle" class="modal-title">Change Password</h3>
+                <button type="button" onclick="closeChangePasswordModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword" class="form-label">Current Password *</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon" aria-hidden="true"></i>
+                            <input type="password" id="currentPassword" name="currentPassword" class="form-input" required
+                                   placeholder="Enter your current password">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword" class="form-label">New Password *</label>
+                        <div class="input-group">
+                            <i class="fas fa-key input-icon" aria-hidden="true"></i>
+                            <input type="password" id="newPassword" name="newPassword" class="form-input" required
+                                   placeholder="Enter new password" minlength="6">
+                        </div>
+                        <p class="form-hint">Password must be at least 6 characters long</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmNewPassword" class="form-label">Confirm New Password *</label>
+                        <div class="input-group">
+                            <i class="fas fa-key input-icon" aria-hidden="true"></i>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required
+                                   placeholder="Confirm new password" minlength="6">
+                        </div>
+                    </div>
+                    
+                    <div id="changePasswordError" class="error-message hidden" aria-live="polite"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeChangePasswordModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="submitChangePassword()" class="btn btn-primary">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deactivate Account Modal -->
+    <div id="deactivateAccountModal" class="modal hidden" role="dialog" aria-labelledby="deactivateAccountModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deactivateAccountModalTitle" class="modal-title">Deactivate Account</h3>
+                <button type="button" onclick="closeDeactivateAccountModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to deactivate your account?</p>
+                <p class="warning-text">Your account will be temporarily disabled, but you can reactivate it later by contacting support.</p>
+                <div class="form-group">
+                    <label for="deactivateReason" class="form-label">Reason for deactivation (optional)</label>
+                    <textarea id="deactivateReason" class="form-input" placeholder="Please let us know why you're deactivating your account..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeDeactivateAccountModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="confirmDeactivateAccount()" class="btn btn-warning">Deactivate Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div id="deleteAccountModal" class="modal hidden" role="dialog" aria-labelledby="deleteAccountModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deleteAccountModalTitle" class="modal-title">Delete Account</h3>
+                <button type="button" onclick="closeDeleteAccountModal()" class="close-btn" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="danger-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h4>This action cannot be undone!</h4>
+                </div>
+                <p>Permanently deleting your account will:</p>
+                <ul class="warning-list">
+                    <li>Remove all your personal data</li>
+                    <li>Delete all your assignments and submissions</li>
+                    <li>Remove your application history</li>
+                    <li>Cancel any pending applications</li>
+                </ul>
+                <div class="form-group">
+                    <label for="deleteAccountConfirmation" class="form-label">Type "DELETE" to confirm *</label>
+                    <input type="text" id="deleteAccountConfirmation" class="form-input" placeholder="Type DELETE to confirm">
+                </div>
+                <div class="form-group">
+                    <label for="deleteAccountPassword" class="form-label">Enter your password *</label>
+                    <input type="password" id="deleteAccountPassword" class="form-input" placeholder="Enter your password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeDeleteAccountModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" onclick="confirmDeleteAccount()" class="btn btn-danger">Delete Account Permanently</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+  </body>
+</html>
