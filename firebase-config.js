@@ -3,10 +3,6 @@
 
 // Function to get environment variable with fallback
 function getEnvVar(key, fallback = '') {
-    // Check if we're in a build environment (Vite)
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-        return import.meta.env[key] || fallback;
-    }
     // Check for process.env (Node.js environment)
     if (typeof process !== 'undefined' && process.env) {
         return process.env[key] || fallback;
@@ -14,6 +10,10 @@ function getEnvVar(key, fallback = '') {
     // Fallback to window variables (browser)
     if (typeof window !== 'undefined' && window.env) {
         return window.env[key] || fallback;
+    }
+    // Check for global environment variables
+    if (typeof window !== 'undefined' && window.ENV) {
+        return window.ENV[key] || fallback;
     }
     return fallback;
 }
